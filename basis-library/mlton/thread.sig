@@ -54,6 +54,8 @@ signature MLTON_THREAD =
 
           (* Move all chunks at the current depth up one level. *)
           val promoteChunks : thread -> unit
+          val linearTraverse: thread -> unit
+
         end
 
       type 'a t

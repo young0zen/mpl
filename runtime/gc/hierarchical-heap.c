@@ -208,6 +208,45 @@ bool HM_HH_isLevelHead(HM_HierarchicalHeap hh)
   return (NULL != hh) && (NULL == hh->representative);
 }
 
+void linearTraverseChunkList2 (GC_state s, HM_chunkList list) {
+  HM_assertChunkListInvariants(list);
+  HM_chunk chunk = HM_getChunkListFirstChunk (list);
+
+  while(chunk!=NULL) {
+
+    pointer p = HM_getChunkStart(chunk);
+
+    assert(chunk->frontier <= chunk->limit);
+    while(p != chunk->frontier){
+      assert(p < chunk->frontier);
+      p = advanceToObjectData(s, p);
+      p += sizeofObjectNoMetaData(s, p);
+    }
+
+    assert(chunk->frontier <= chunk->limit);
+    chunk = chunk->nextChunk;
+  }
+  HM_assertChunkListInvariants(list);
+}
+
+void HM_HH_linearTraverse(pointer threadp) {
+  GC_state s = pthread_getspecific(gcstate_key);
+  GC_thread thread = threadObjptrToStruct(s, pointerToObjptr(threadp, NULL));
+  assert(thread != NULL);
+
+  HM_HH_updateValues(thread, s->frontier);
+
+  if (s->limitPlusSlop < s->frontier) {
+    DIE("s->limitPlusSlop (%p) < s->frontier (%p)",
+        ((void*)(s->limit)),
+        ((void*)(s->frontier)));
+  }
+
+  HM_HierarchicalHeap hh = thread->hierarchicalHeap;
+  linearTraverseChunkList2(s, HM_HH_getChunkList(hh));
+}
+
+
 HM_HierarchicalHeap HM_HH_new(GC_state s, uint32_t depth)
 {
   size_t bytesNeeded = sizeof(struct HM_HierarchicalHeap);

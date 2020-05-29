@@ -75,6 +75,7 @@ struct
 
   fun getDepth t = Word32.toInt (Prim.getDepth t)
   fun setDepth (t, d) = Prim.setDepth (t, Word32.fromInt d)
+  fun linearTraverse (t) = Prim.linearTraverse(t)
 end
 
 fun prepend (T r: 'a t, f: 'b -> 'a): 'b t =

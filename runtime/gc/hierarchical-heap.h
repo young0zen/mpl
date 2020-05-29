@@ -76,6 +76,7 @@ size_t HM_HH_nextCollectionThreshold(GC_state s, size_t survivingSize);
 size_t HM_HH_addRecentBytesAllocated(GC_thread thread, size_t bytes);
 
 uint32_t HM_HH_desiredCollectionScope(GC_state s, GC_thread thread);
+void HM_HH_linearTraverse(pointer threadp);
 
 #endif /* MLTON_GC_INTERNAL_FUNCS */
 
