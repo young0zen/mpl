@@ -229,13 +229,19 @@ void linearTraverseChunkList2 (GC_state s, HM_chunkList list) {
   HM_assertChunkListInvariants(list);
 }
 
+void printObjPtrFunction(GC_state s, objptr* opp, void* rawArgs) {
+  printf("\t %p", opp);
+}
+
 void HM_HH_linearTraverse(pointer threadp) {
   GC_state s = pthread_getspecific(gcstate_key);
+
+// Boilerplate runtime entry
+  beginAtomic(s);
+  switchToSignalHandlerThreadIfNonAtomicAndSignalPending(s);
   GC_thread thread = threadObjptrToStruct(s, pointerToObjptr(threadp, NULL));
   assert(thread != NULL);
-
   HM_HH_updateValues(thread, s->frontier);
-
   if (s->limitPlusSlop < s->frontier) {
     DIE("s->limitPlusSlop (%p) < s->frontier (%p)",
         ((void*)(s->limit)),
@@ -243,7 +249,22 @@ void HM_HH_linearTraverse(pointer threadp) {
   }
 
   HM_HierarchicalHeap hh = thread->hierarchicalHeap;
-  linearTraverseChunkList2(s, HM_HH_getChunkList(hh));
+  pointer stackPtr = objptrToPointer(getStackCurrentObjptr(s), NULL);
+
+  printf(" ==\nchunk of %p = %p\n ==\n", stackPtr, HM_getChunkOf(stackPtr));
+  printf("%s", "original stack: ");
+
+  // traverse the stack
+  foreachObjptrInObject(s, stackPtr, false, trueObjptrPredicate, NULL,
+          printObjPtrFunction, NULL);
+
+  s->frontier = HM_HH_getFrontier(thread);
+  s->limitPlusSlop = HM_HH_getLimit(thread);
+  s->limit = s->limitPlusSlop - GC_HEAP_LIMIT_SLOP;
+
+  assert(invariantForMutatorFrontier (s));
+  assert(invariantForMutatorStack (s));
+  endAtomic(s);
 }
 
 

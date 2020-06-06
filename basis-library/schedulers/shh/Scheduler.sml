@@ -229,7 +229,7 @@ struct
           end
 
         val _ = push g'
-        val _ = if depth = 1 then HH.linearTraverse (thread) else ()
+        val _ = HH.linearTraverse(thread)
 
         val _ = HH.setDepth (thread, depth + 1)
 
