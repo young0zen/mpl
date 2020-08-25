@@ -317,12 +317,14 @@ void HM_HHC_collectLocal(uint32_t desiredScope) {
    * I skip the stack and thread since they are already forwarded as roots
    * above
    */
+  /*
   struct SSATOPredicateArgs ssatoPredicateArgs = {
     .expectedStackPointer = objptrToPointer(getStackCurrentObjptr(s),
                                             NULL),
     .expectedThreadPointer = objptrToPointer(getThreadCurrentObjptr(s),
                                              NULL)
   };
+  */
 
   /* off-by-one to prevent underflow */
   uint32_t depth = thread->currentDepth+1;
@@ -349,8 +351,8 @@ void HM_HHC_collectLocal(uint32_t desiredScope) {
         s,
         toSpaceList->firstChunk,
         HM_getChunkStart(toSpaceList->firstChunk),
-        &skipStackAndThreadObjptrPredicate,
-        &ssatoPredicateArgs,
+        trueObjptrPredicate,
+        NULL,
         &forwardHHObjptr,
         &forwardHHObjptrArgs);
     }
