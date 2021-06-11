@@ -108,8 +108,8 @@ void HM_HHC_collectLocal(uint32_t desiredScope) {
     minDepth--;
   }
 
-  if (minDepth == 0) {
-    LOG(LM_HH_COLLECTION, LL_INFO, "Skipping collection that includes root heap");
+  if (minDepth < thread->minLocalCollectionDepth) {
+    LOG(LM_HH_COLLECTION, LL_INFO, "Skipping collection too shallow");
     releaseLocalScope(s, originalLocalScope);
     return;
   }
