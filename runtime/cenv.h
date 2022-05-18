@@ -100,6 +100,8 @@ COMPILE_TIME_ASSERT(sizeof_double__is_eight, sizeof(double) == 8);
 #include "platform/openbsd.h"
 #elif (defined (__sun__))
 #include "platform/solaris.h"
+#elif (defined (__NAUTILUS__))
+#include "platform/nautilus.h"
 #else
 #error unknown platform os
 #endif
