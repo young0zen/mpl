@@ -15,6 +15,10 @@
 #include "ml-types.h"
 #include "c-types.h"
 
+//#ifdef __NAUTILUS__
+#define spinlock_init spinlock_init_mpl
+//#endif
+
 #ifndef MLton_Platform_Arch_host
 #error MLton_Platform_Arch_host not defined
 #endif

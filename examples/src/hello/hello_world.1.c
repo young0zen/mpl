@@ -1030,7 +1030,7 @@ PRIVATE const ChunkFnPtr_t nextChunks[194] = {
 };
 
 MLtonMain (8, (Word32)(0xC1A89C91ull), 392, FALSE, PROFILE_NONE, FALSE, /* initGlobals_0 */ 191)
-int main (int argc, char* argv[]) { return (MLton_main (argc, argv)); }
+int mpl_main (int argc, char* argv[]) { return (MLton_main (argc, argv)); }
 
 MLtonCallFromC ()
 PUBLIC void Parallel_run () {

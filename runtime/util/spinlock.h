@@ -24,6 +24,8 @@ typedef volatile uint32_t spinlock_t;
  */
 #define SPINLOCK_INITIALIZER ((spinlock_t)(~0))
 
+#define spinlock_init spinlock_init_mpl
+
 /**
  * Initializes a spinlock
  *
