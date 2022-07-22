@@ -15,6 +15,10 @@ void initSignalStack () {
 #else
 
 void initSignalStack () {
+	printf("implemented iniSgnalStack\n");
+#ifdef __NAUTILUS__
+	printf("Nautilus defined\n");
+#endif
   static stack_t altstack = { .ss_sp = NULL, .ss_size = 0, .ss_flags = 0 };
 
   if (! altstack.ss_sp) {

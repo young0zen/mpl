@@ -35,7 +35,9 @@ void MLton_halt (GC_state s, C_Int_t status) {
    * need to flush our trace buffer manually. */
   GC_traceFinish(s);
 
+//#ifndef __NAUTILUS__
   exit (status);
+//#endif
 }
 
 void MLton_heapCheckTooLarge (void) {

@@ -44,10 +44,10 @@ WITH_PIC_RUNTIME := $(or $(findstring true,$(RELEASE) $(WITH_ALL_RUNTIME)),false
 WITH_PIE_RUNTIME := $(or $(findstring true,$(RELEASE) $(WITH_ALL_RUNTIME)),false)
 
 # These flags can be overridden by the user
-CCFLAGS :=
+CCFLAGS := -g
 MFLAGS :=
-CPPFLAGS :=
-CFLAGS :=
+CPPFLAGS := -g
+CFLAGS := -g
 LDFLAGS :=
 
 XCCFLAGS := -std=gnu11
@@ -74,6 +74,15 @@ XLDFLAGS += -L$(WITH_GMP_LIB_DIR)
 endif
 
 XCPPFLAGS += -I.
+
+ifeq ($(TARGET_OS), nautilus)
+	CCFLAGS += -D__NAUTILUS__ -fno-omit-frame-pointer -ffreestanding -fno-stack-protector
+	CCFLAGS += -fno-strict-aliasing -fno-strict-overflow -mno-red-zone -mcmodel=large
+	CCFLAGS += -fno-delete-null-pointer-checks -no-pie -fno-pic -fno-PIC -fno-PIE
+	CCFLAGS += -fno-common -fgnu89-inline -m64
+#	WITH_PIC_RUNTIME := false
+	#WITH_PIE_RUNTIME := false
+endif
 
 # Win32&64 don't use PIC code, all other platforms do
 ifeq ($(findstring $(TARGET_OS), mingw cygwin),$(TARGET_OS))

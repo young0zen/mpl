@@ -1029,7 +1029,86 @@ PRIVATE const ChunkFnPtr_t nextChunks[194] = {
 	/* 193: */ /* L_3 */ &(Chunk_6),
 };
 
-MLtonMain (8, (Word32)(0xC1A89C91ull), 392, FALSE, PROFILE_NONE, FALSE, /* initGlobals_0 */ 191)
+void MLton_threadFunc (void* arg) {                                     
+  uintptr_t nextBlock;                                                  
+  GC_state s = (GC_state)arg;                                           
+                                                                        
+                                                                        
+  /* Do not set CPU affinity when running on a single processor  */     
+  if (s->controls->setAffinity && s->numberOfProcs > 1) {               
+      uint32_t num = Proc_processorNumber (s)                           
+          * s->controls->affinityStride                                 
+          + s->controls->affinityBase;                                  
+      set_cpu_affinity(num);                                            
+  }                                                                     
+                                                                        
+  /* Save our state locally */                                          
+  if (s->procNumber != 0) {                                             
+    pthread_setspecific (gcstate_key, s);                               
+  }                                                                     
+  if (s->amOriginal) {                                                  
+    nextBlock = 191;                                                     
+  } else {                                                              
+    /* Return to the saved world */                                     
+    nextBlock = getNextBlockFromStackTop (s);                           
+  }                                                                     
+  /* Check to see whether or not we are the first thread */             
+  if (Proc_processorNumber (s) == 0) {                                  
+    Trace0(EVENT_LAUNCH);                                               
+    /* Trampoline */                                                    
+    MLton_trampoline (s, nextBlock, FALSE);                             
+  }                                                                     
+  else {                                                                
+    Proc_waitForInitialization (s);                                     
+    Trace0(EVENT_LAUNCH);                                               
+    Parallel_run ();                                                    
+  }                                                                     
+  return 1;                                                             
+}
+
+                                                                        
+  PUBLIC int MLton_main (int argc, char* argv[]) {                      
+    int procNo;                                                         
+    GC_state gcState;                                                   
+    pthread_t *threads;                                                 
+    {                                                                   
+      struct GC_state s;                                                
+      /* Initialize with a generic state to read in @MLtons, etc */     
+      Initialize ((&s), 8, (Word32)(0xC1A89C91ull), 392, FALSE, PROFILE_NONE, FALSE);                      
+                                                                        
+      gcState = (GC_state) malloc (s.numberOfProcs * sizeof (struct GC_state)); 
+      /* Create key */                                                  
+      if (pthread_key_create(&gcstate_key, MLtonGCCleanup)) {           
+        fprintf (stderr, "pthread_key_create failed: %s\n", strerror (errno)); 
+        exit (1);                                                       
+      }                                                                 
+      /* Now copy initialization to the first processor state */        
+      memcpy (&gcState[0], &s, sizeof (struct GC_state));               
+      gcState[0].procStates = gcState;                                  
+      gcState[0].procNumber = 0;                                        
+      pthread_setspecific(gcstate_key, &gcState[0]);                    
+      GC_lateInit (&gcState[0]);                                        
+    }                                                                   
+    /* Fill in per-processor data structures */                         
+    for (procNo = 1; procNo < gcState[0].numberOfProcs; procNo++) {     
+      Duplicate (&gcState[procNo], &gcState[0]);                        
+      gcState[procNo].procStates = gcState;                             
+      gcState[procNo].procNumber = procNo;                              
+    }                                                                   
+    /* Set up tracing infrastructure */                                 
+    for (procNo = 0; procNo < gcState[0].numberOfProcs; procNo++)       
+        GC_traceInit(&gcState[procNo]);                                 
+    /* Now create the threads */                                        
+    for (procNo = 1; procNo < gcState[0].numberOfProcs; procNo++) {     
+      if (pthread_create (&gcState[procNo].self, NULL, &MLton_threadFunc, (void *)&gcState[procNo])) { 
+        fprintf (stderr, "pthread_create failed: %s\n", strerror (errno)); 
+        exit (1);                                                       
+      }                                                                 
+    }                                                                   
+    MLton_threadFunc ((void *)&gcState[0]);                             
+  }
+
+//MLtonMain (8, (Word32)(0xC1A89C91ull), 392, FALSE, PROFILE_NONE, FALSE, /* initGlobals_0 */ 191)
 int mpl_main (int argc, char* argv[]) { return (MLton_main (argc, argv)); }
 
 MLtonCallFromC ()

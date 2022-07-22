@@ -68,11 +68,14 @@ void *GC_mmapFileReadable (int fd, size_t size) {
 }
 
 void *GC_mmapAnon (void *start, size_t length) {
-        return 0;
+	//printf("GC_mmapAnon\n");
+	void *m = malloc(length);
+        return m;
 }
 
-void *GC_mmapAnonFlags (void *start, size_t length, int flags) {
-	return 0;
+void *GC_mmapAnonFlags (void *start, size_t length, __attribute__((unused)) int flags) {
+	printf("GC_mmapAnonFlags\n");
+	return GC_mmapAnon(start, length);
 }
 
 void *GC_mmapAnonStack (void *start, size_t length, int prot,
